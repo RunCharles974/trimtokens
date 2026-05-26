@@ -1,0 +1,137 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "trimtokens"
+version = "0.1.0"
+description = "Convertit documents (PDF/DOCX/PPTX/XLSX/images/HTML) en Markdown compact pour reduire la consommation de tokens Claude"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "cg97411", email = "cg97411@users.noreply.github.com" },
+]
+keywords = ["tokens", "markdown", "ocr", "pdf", "claude", "llm", "cleanup"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Text Processing :: Markup",
+  "Topic :: Utilities",
+]
+dependencies = [
+  "typer>=0.12",
+  "rich>=13.7",
+  "pyyaml>=6.0",
+  "chardet>=5.2",
+  "pyperclip>=1.8",
+  "tomli>=2.0; python_version<'3.11'",
+  "pymupdf>=1.24",
+  "python-docx>=1.1",
+  "python-pptx>=0.6.23",
+  "openpyxl>=3.1",
+  "beautifulsoup4>=4.12",
+  "markdownify>=0.12",
+  "striprtf>=0.0.26",
+  "tiktoken>=0.7",
+  "diskcache>=5.6",
+]
+
+[project.optional-dependencies]
+ocr = [
+  "pytesseract>=0.3.10",
+  "Pillow>=10.0",
+  "opencv-python-headless>=4.9",
+  "pillow-heif>=0.16",
+]
+gui = [
+  "customtkinter>=5.2",
+  "tkinterdnd2>=0.4",
+]
+dev = [
+  "pytest>=8.0",
+  "pytest-cov>=5.0",
+  "ruff>=0.5",
+  "mypy>=1.10",
+  "pyinstaller>=6.5",
+  "types-PyYAML",
+]
+all = [
+  "trimtokens[ocr,gui,dev]",
+]
+
+[project.scripts]
+trimtokens = "trimtokens.cli:app"
+
+[project.gui-scripts]
+trimtokens-gui = "trimtokens.gui:main"
+
+[project.urls]
+Homepage = "https://github.com/cg97411/trimtokens"
+Repository = "https://github.com/cg97411/trimtokens"
+Issues = "https://github.com/cg97411/trimtokens/issues"
+Changelog = "https://github.com/cg97411/trimtokens/blob/main/CHANGELOG.md"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/trimtokens"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+  "E", "F", "W",
+  "I",
+  "B",
+  "UP",
+  "N",
+  "C4",
+  "SIM",
+  "RUF",
+]
+ignore = [
+  "E501",
+  "RUF001",  # Caractères unicode ambigus dans strings (projet francophone)
+  "RUF002",  # Idem dans docstrings (×, —, etc.)
+  "RUF003",  # Idem dans commentaires
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["N802", "N803"]
+"src/trimtokens/cli.py" = ["B008"]  # typer.Option/Argument calls in defaults are idiomatic
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+files = ["src", "tests"]
+
+[[tool.mypy.overrides]]
+module = [
+  "fitz",
+  "pytesseract",
+  "cv2",
+  "tkinterdnd2",
+  "customtkinter",
+  "markdownify",
+  "striprtf.*",
+  "pillow_heif",
+  "diskcache",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = ["-ra", "--strict-markers", "--strict-config"]

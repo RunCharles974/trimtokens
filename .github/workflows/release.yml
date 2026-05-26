@@ -1,0 +1,144 @@
+# Workflow de publication de release
+# Déclenché par push d'un tag v* : build des binaires PyInstaller pour 4 plateformes
+# (Linux x64, Windows x64, macOS x64, macOS arm64) puis publication d'une release GitHub.
+# Bilingue : commentaires en français, étapes nommées EN (FR).
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build (${{ matrix.os_label }}-${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            os_label: linux
+            arch: x64
+          - os: windows-latest
+            os_label: windows
+            arch: x64
+          - os: macos-13
+            os_label: macos
+            arch: x64
+          - os: macos-14
+            os_label: macos
+            arch: arm64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python (Configurer Python)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install Tesseract on Ubuntu (Installer Tesseract sous Ubuntu)
+        if: matrix.os_label == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tesseract-ocr tesseract-ocr-fra tesseract-ocr-eng
+
+      - name: Install Tesseract on macOS (Installer Tesseract sous macOS)
+        if: matrix.os_label == 'macos'
+        run: brew install tesseract tesseract-lang
+
+      - name: Install Tesseract on Windows (Installer Tesseract sous Windows)
+        if: matrix.os_label == 'windows'
+        run: choco install tesseract --no-progress -y
+
+      - name: Install package + build deps (Installer paquet et dépendances de build)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[ocr,gui,dev]"
+
+      - name: Run tests before build (Exécuter les tests avant build)
+        run: pytest -x --tb=short
+
+      - name: Build executables (Construire les exécutables)
+        run: python build.py --clean
+
+      - name: List artifacts on Unix (Lister les artefacts sous Unix)
+        if: runner.os != 'Windows'
+        run: ls -la dist/
+
+      - name: List artifacts on Windows (Lister les artefacts sous Windows)
+        if: runner.os == 'Windows'
+        run: Get-ChildItem dist
+        shell: pwsh
+
+      - name: Smoke test CLI executable on Linux/macOS (Test de fumée exécutable CLI sous Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          ./dist/trimtokens-${{ matrix.os_label }}-${{ matrix.arch }} --version
+
+      - name: Smoke test CLI executable on Windows (Test de fumée exécutable CLI sous Windows)
+        if: runner.os == 'Windows'
+        run: .\dist\trimtokens-windows-x64.exe --version
+
+      - name: Upload artifacts (Téléverser les artefacts)
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries-${{ matrix.os_label }}-${{ matrix.arch }}
+          path: |
+            dist/trimtokens-${{ matrix.os_label }}-${{ matrix.arch }}*
+            dist/trimtokens-gui-${{ matrix.os_label }}-${{ matrix.arch }}*
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    name: Publier la release GitHub
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts (Télécharger tous les artefacts)
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: List collected artifacts (Lister les artefacts collectés)
+        run: ls -la artifacts/
+
+      - name: Create GitHub release (Créer la release GitHub)
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/trimtokens*
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref, '-rc') || contains(github.ref, '-beta') || contains(github.ref, '-alpha') }}
+          body: |
+            ## TrimTokens ${{ github.ref_name }}
+
+            Téléchargez le binaire correspondant à votre OS :
+
+            | OS | Architecture | CLI | GUI |
+            |---|---|---|---|
+            | Windows | x64 | `trimtokens-windows-x64.exe` | `trimtokens-gui-windows-x64.exe` |
+            | macOS | Intel | `trimtokens-macos-x64` | `trimtokens-gui-macos-x64` |
+            | macOS | Apple Silicon | `trimtokens-macos-arm64` | `trimtokens-gui-macos-arm64` |
+            | Linux | x64 | `trimtokens-linux-x64` | `trimtokens-gui-linux-x64` |
+
+            ### Prérequis système
+
+            **Tesseract OCR** (pour traitement PDF scannés et images) :
+            - Windows : `winget install --id UB-Mannheim.TesseractOCR` ou `choco install tesseract`
+            - macOS : `brew install tesseract tesseract-lang`
+            - Linux : `sudo apt install tesseract-ocr tesseract-ocr-fra tesseract-ocr-eng`
+
+            Les binaires fonctionnent sans Tesseract — l'OCR sera simplement désactivé.

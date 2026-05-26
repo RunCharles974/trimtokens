@@ -1,0 +1,108 @@
+# TrimTokens — fichier de configuration utilisateur
+# Emplacement :
+#   Linux/macOS : ~/.trimtokens/config.toml
+#   Windows     : %APPDATA%\trimtokens\config.toml
+#   Surcharge   : variable d'environnement TRIMTOKENS_HOME=/chemin/personnalise
+
+[ocr]
+# Langues OCR par défaut (codes Tesseract : fra, eng, deu, spa, ita...)
+# Format : "fra+eng" pour multi-langues
+languages = "fra+eng"
+
+# Mode PSM (Page Segmentation Mode) Tesseract
+# 1 = auto avec détection orientation (multi-colonnes)
+# 6 = bloc uniforme de texte (recommandé par défaut)
+# 11 = texte épars
+psm = 6
+
+# Forcer OCR même si texte natif présent (false par défaut)
+force_ocr = false
+
+# Désactiver complètement OCR (false par défaut)
+no_ocr = false
+
+# Nombre de workers parallèles pour OCR PDF
+# 0 = auto (os.cpu_count() - 1)
+workers = 0
+
+# DPI minimum avant upscale automatique
+min_dpi = 300
+
+
+[pdf]
+# Seuils heuristiques d'extraction PDF. Externalisés depuis pdf.py — modifiables
+# sans patcher le code (cf audit §PDF "Heuristiques codées en dur").
+
+# Caractères natifs minimum par page avant déclenchement OCR.
+# Pages avec moins de chars natifs sont OCRisées (si --no-ocr absent).
+min_native_chars_per_page = 50
+
+# DPI de rastérisation des pages PDF avant OCR. Plus haut = meilleure précision OCR
+# mais plus lent et plus de RAM. 300 est le sweet spot Tesseract.
+ocr_dpi = 300
+
+# Seuils détection PDF "image-based" (contenu en images, pas en texte natif) :
+# si chars natifs moyens < seuil ET images moyennes >= seuil ET nb pages >= min_pages
+# → PDF déclaré image-based, OCR fortement recommandé.
+image_based_max_chars_per_page = 100
+image_based_min_images_per_page = 2
+image_based_min_pages = 3
+
+
+[cleaning]
+# Mode agressif : déduplication maximale, suppression footers/headers répétés
+aggressive = false
+
+# Limite caractères de sortie (0 = pas de limite)
+max_chars = 0
+
+# Seuil détection header/footer récurrent (fraction des pages)
+header_footer_threshold = 0.30
+
+# Seuil dédup paragraphes (nombre minimum d'occurrences)
+dedup_min_occurrences = 3
+
+# Drop automatique des pages quasi-vides (< empty_page_min_words mots)
+drop_empty_pages = true
+empty_page_min_words = 5
+
+# Fusion paragraphes inter-pages si fin de page sans ponctuation finale
+merge_continuations = true
+
+# Filtrage intelligent (opt-in) : table des matières, bibliographie, pages éparses
+smart_filter = false
+filter_toc = true
+filter_bibliography = true
+filter_sparse = true
+
+
+[output]
+# Format de sortie par défaut : md, txt, json
+format = "md"
+
+# Copier dans le presse-papiers après nettoyage
+clipboard = false
+
+# Ouvrir le fichier nettoyé après traitement (GUI uniquement)
+open_after = false
+
+
+[cache]
+# Désactiver le cache OCR
+disabled = false
+
+# Durée de vie du cache en jours (0 = illimité)
+ttl_days = 90
+
+
+[logging]
+# Niveau : DEBUG, INFO, WARNING, ERROR
+level = "INFO"
+
+# Format compact (false) ou détaillé (true)
+verbose = false
+
+# Chemin fichier JSON Lines pour logs structurés (vide = désactivé).
+# Un objet JSON par ligne, parsable par jq / Loki / ELK / pandas.
+# Override CLI : --log-file PATH
+json_file = ""

@@ -1,0 +1,25 @@
+# Dépendances runtime minimales (cf pyproject.toml pour version pinning exacte)
+# Pour installation complète : pip install -e .[ocr,gui,dev]
+typer>=0.12
+rich>=13.7
+pyyaml>=6.0
+chardet>=5.2
+pyperclip>=1.8
+tomli>=2.0; python_version<'3.11'
+pymupdf>=1.24
+python-docx>=1.1
+python-pptx>=0.6.23
+openpyxl>=3.1
+beautifulsoup4>=4.12
+markdownify>=0.12
+striprtf>=0.0.26
+tiktoken>=0.7
+diskcache>=5.6
+# OCR
+pytesseract>=0.3.10
+Pillow>=10.0
+opencv-python-headless>=4.9
+pillow-heif>=0.16
+# GUI
+customtkinter>=5.2
+tkinterdnd2>=0.4

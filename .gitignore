@@ -1,0 +1,95 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# mypy / ruff
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.ruff_cache/
+
+# TrimTokens local
+.trimtokens_cache/
+*.clean.md
+*.smart.md
+fixtures/output/
+tmp/
+
+# Données perso / outputs OCR locaux (NE PAS commit)
+secours/
+
+# Audit / analyses locales
+AnalyseChatGPT*.md
+*.zip
+
+# Claude Code settings personnels (project template settings.json reste committé)
+.claude/settings.local.json
+
+# Tesseract data files (téléchargés localement, 14-28 Mo)
+tessdata/
+
+# Installeurs téléchargés
+tesseract-installer*.exe
+
+# OS
+*.log
+*.bak

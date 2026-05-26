@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "_comment": "Template projet réutilisable. Désactive plugins/skills non utilisés pour économiser tokens contexte. Copier ce fichier à la racine d'un projet sous .claude/settings.json",
+
+  "_examples": {
+    "projet_web_frontend": {
+      "enabledPlugins": {
+        "example-skills@anthropic-agent-skills": true,
+        "frontend-design@claude-plugins-official": true
+      }
+    },
+    "projet_doc_lourd_xlsx_docx_pdf": {
+      "enabledPlugins": {
+        "example-skills@anthropic-agent-skills": true
+      }
+    },
+    "projet_code_pur_python_libs": {
+      "enabledPlugins": {
+        "example-skills@anthropic-agent-skills": false,
+        "frontend-design@claude-plugins-official": false
+      }
+    }
+  },
+
+  "enabledPlugins": {
+    "example-skills@anthropic-agent-skills": false,
+    "frontend-design@claude-plugins-official": false,
+    "caveman@caveman": true
+  },
+
+  "disabledMcpjsonServers": [
+    "claude_ai_Gmail",
+    "claude_ai_Google_Calendar",
+    "claude_ai_Google_Drive",
+    "claude_ai_OpenLegi_-_Legifrance"
+  ],
+
+  "enableAllProjectMcpServers": false,
+
+  "model": "opus"
+}
