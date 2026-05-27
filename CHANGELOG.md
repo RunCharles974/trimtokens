@@ -7,6 +7,23 @@ et ce projet suit le [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+### Changed (BREAKING)
+- Dépendances format binaire déplacées en extras (cf audit §Packaging
+  "Séparer davantage les extras"). `pip install trimtokens` n'installe plus
+  pymupdf/python-docx/python-pptx/openpyxl/beautifulsoup4/markdownify/striprtf
+  par défaut. Nouveaux extras :
+  - `[pdf]` → pymupdf
+  - `[office]` → python-docx + python-pptx + openpyxl
+  - `[web]` → beautifulsoup4 + markdownify
+  - `[rtf]` → striprtf
+  - `[formats]` → raccourci pdf+office+web+rtf
+  - `[all]` → tout (formats + ocr + gui + dev)
+  Footprint core install ~10× réduit. Migration : `pip install 'trimtokens[all]'`
+  reproduit l'ancien comportement.
+- Tous les extracteurs lèvent `MissingDependencyError` à l'extraction (pas à
+  l'import du package) si la dep correspondante est absente. Message inclut
+  l'extra à installer.
+
 ### Changed
 - Refactor GUI MVVM léger (cf audit §GUI "Refactor MVVM ou MVC léger") :
   `gui.py` (648 lignes) → package `gui/` à 4 modules :

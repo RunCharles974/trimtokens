@@ -15,13 +15,17 @@ import io
 import logging
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-import fitz  # type: ignore[import-untyped]
+try:
+    import fitz  # type: ignore[import-untyped]
+except ImportError:  # pragma: no cover - dépendance optionnelle absente
+    fitz = None  # type: ignore[assignment]
 
 from trimtokens.cleaners.heuristics import analyze_pages, filter_pages
 from trimtokens.cleaners.page_merge import mark_continuations
 from trimtokens.cleaners.pipeline import strip_recurring_headers_footers
+from trimtokens.exceptions import MissingDependencyError
 from trimtokens.logging_setup import Events, log_event
 from trimtokens.models import ExtractedDocument, ExtractOptions, Section
 
@@ -84,6 +88,11 @@ def detect_image_based(
 
 
 def extract(path: Path, options: ExtractOptions) -> ExtractedDocument:
+    if fitz is None:
+        raise MissingDependencyError(
+            "Le package 'pymupdf' est requis pour extraire les fichiers .pdf. "
+            "Installez l'extra : pip install 'trimtokens[pdf]'"
+        )
     pdf = fitz.open(str(path))
     try:
         title = pdf.metadata.get("title") or None
@@ -244,7 +253,7 @@ def _emit_image_based_warning(
 
 
 def _ocr_pages(
-    pdf: fitz.Document, page_indices: list[int], options: ExtractOptions
+    pdf: Any, page_indices: list[int], options: ExtractOptions
 ) -> dict[int, str]:
     """Rastérise les pages indiquées puis lance OCR (avec cache + parallel optionnel)."""
     from trimtokens.ocr.backend import get_backend

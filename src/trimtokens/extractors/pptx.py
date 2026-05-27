@@ -10,12 +10,21 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from pptx import Presentation  # type: ignore[import-untyped]
+try:
+    from pptx import Presentation  # type: ignore[import-untyped]
+except ImportError:  # pragma: no cover - dépendance optionnelle absente
+    Presentation = None  # type: ignore[assignment, misc]
 
+from trimtokens.exceptions import MissingDependencyError
 from trimtokens.models import ExtractedDocument, ExtractOptions, Section
 
 
 def extract(path: Path, options: ExtractOptions) -> ExtractedDocument:
+    if Presentation is None:
+        raise MissingDependencyError(
+            "Le package 'python-pptx' est requis pour extraire les fichiers .pptx. "
+            "Installez l'extra : pip install 'trimtokens[office]'"
+        )
     presentation = Presentation(str(path))
 
     doc_title = presentation.core_properties.title or None

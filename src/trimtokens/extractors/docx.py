@@ -12,14 +12,23 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from docx import Document  # type: ignore[import-untyped]
+try:
+    from docx import Document  # type: ignore[import-untyped]
+except ImportError:  # pragma: no cover - dépendance optionnelle absente
+    Document = None  # type: ignore[assignment, misc]
 
+from trimtokens.exceptions import MissingDependencyError
 from trimtokens.models import ExtractedDocument, ExtractOptions, Section
 
 _HEADING_RE = re.compile(r"^Heading\s+(\d+)$")
 
 
 def extract(path: Path, options: ExtractOptions) -> ExtractedDocument:
+    if Document is None:
+        raise MissingDependencyError(
+            "Le package 'python-docx' est requis pour extraire les fichiers .docx. "
+            "Installez l'extra : pip install 'trimtokens[office]'"
+        )
     doc = Document(str(path))
 
     title = doc.core_properties.title or None

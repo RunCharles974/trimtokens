@@ -25,6 +25,9 @@ classifiers = [
   "Topic :: Text Processing :: Markup",
   "Topic :: Utilities",
 ]
+# Core dependencies — minimum requis pour CLI/pipeline/cleaners + formats texte
+# natifs (.txt, .md). Extracteurs binaires (PDF/DOCX/etc.) en extras pour install
+# légère et footprint mémoire réduit (cf audit §Packaging).
 dependencies = [
   "typer>=0.12",
   "rich>=13.7",
@@ -32,18 +35,28 @@ dependencies = [
   "chardet>=5.2",
   "pyperclip>=1.8",
   "tomli>=2.0; python_version<'3.11'",
-  "pymupdf>=1.24",
-  "python-docx>=1.1",
-  "python-pptx>=0.6.23",
-  "openpyxl>=3.1",
-  "beautifulsoup4>=4.12",
-  "markdownify>=0.12",
-  "striprtf>=0.0.26",
   "tiktoken>=0.7",
   "diskcache>=5.6",
 ]
 
 [project.optional-dependencies]
+# Extras par famille de formats. Chaque extracteur lève
+# `MissingDependencyError` à l'extraction si la dep correspondante est absente.
+pdf = [
+  "pymupdf>=1.24",
+]
+office = [
+  "python-docx>=1.1",
+  "python-pptx>=0.6.23",
+  "openpyxl>=3.1",
+]
+web = [
+  "beautifulsoup4>=4.12",
+  "markdownify>=0.12",
+]
+rtf = [
+  "striprtf>=0.0.26",
+]
 ocr = [
   "pytesseract>=0.3.10",
   "Pillow>=10.0",
@@ -62,8 +75,12 @@ dev = [
   "pyinstaller>=6.5",
   "types-PyYAML",
 ]
+# Méta-extras : raccourcis usuels
+formats = [
+  "trimtokens[pdf,office,web,rtf]",
+]
 all = [
-  "trimtokens[ocr,gui,dev]",
+  "trimtokens[pdf,office,web,rtf,ocr,gui,dev]",
 ]
 
 [project.scripts]

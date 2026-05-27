@@ -61,20 +61,36 @@ Les documents bruts envoyés à Claude (et autres LLM) contiennent énormément 
 
 ### Mode 1 — pip (développeurs)
 
+Install complet (recommandé) :
 ```bash
-pip install trimtokens[ocr,gui]
+pip install 'trimtokens[all]'
 ```
 
-Variantes :
-- `pip install trimtokens` — CLI uniquement, sans OCR ni GUI
-- `pip install trimtokens[ocr]` — CLI + OCR
-- `pip install trimtokens[gui]` — CLI + GUI
-- `pip install trimtokens[ocr,gui]` — tout
+Install ciblé par familles de formats (footprint réduit) :
+
+| Extra | Formats / fonctions | Deps lourdes |
+|-------|---------------------|--------------|
+| `pdf` | `.pdf` | `pymupdf` |
+| `office` | `.docx` `.pptx` `.xlsx` | `python-docx`, `python-pptx`, `openpyxl` |
+| `web` | `.html` `.htm` | `beautifulsoup4`, `markdownify` |
+| `rtf` | `.rtf` | `striprtf` |
+| `ocr` | OCR Tesseract sur PDF + images | `pytesseract`, `Pillow`, `opencv-python-headless` |
+| `gui` | Interface graphique | `customtkinter`, `tkinterdnd2` |
+| `formats` | Raccourci `pdf+office+web+rtf` | — |
+| `all` | Tout (formats + ocr + gui + dev) | — |
+
+Exemples :
+- `pip install trimtokens` — CLI seul + formats texte natifs (`.txt`, `.md`, `.csv`)
+- `pip install 'trimtokens[pdf,ocr]'` — PDF + OCR uniquement
+- `pip install 'trimtokens[formats]'` — tous les formats binaires sans OCR ni GUI
+- `pip install 'trimtokens[all]'` — install complète
+
+> Sans l'extra correspondant, traiter un format binaire lève `MissingDependencyError` avec la commande d'install exacte à exécuter.
 
 ### Mode 2 — pipx (utilisateurs avancés, isolement)
 
 ```bash
-pipx install "trimtokens[ocr,gui]"
+pipx install 'trimtokens[all]'
 ```
 
 ### Mode 3 — Exécutable standalone (utilisateurs sans Python) ⭐
