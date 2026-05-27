@@ -79,7 +79,7 @@ pipx install "trimtokens[ocr,gui]"
 
 ### Mode 3 — Exécutable standalone (utilisateurs sans Python) ⭐
 
-Télécharger le binaire pour votre OS depuis la [page Releases GitHub](https://github.com/cg97411/trimtokens/releases/latest) :
+Télécharger le binaire pour votre OS depuis la [page Releases GitHub](https://github.com/RunCharles974/trimtokens/releases/latest) :
 
 | OS | Architecture | CLI | GUI |
 |---|---|---|---|
@@ -384,7 +384,7 @@ Fichier optionnel `~/.trimtokens/config.toml` (ou `%APPDATA%\trimtokens\config.t
 ### Setup local
 
 ```bash
-git clone https://github.com/cg97411/trimtokens.git
+git clone https://github.com/RunCharles974/trimtokens.git
 cd trimtokens
 python -m venv .venv
 source .venv/bin/activate  # ou .venv\Scripts\activate sous Windows
@@ -458,7 +458,7 @@ Pour les bugs : ouvrir une issue avec un cas reproductible minimum (un petit fic
 
 ## Licence
 
-[MIT](LICENSE) © 2026 cg97411
+[MIT](LICENSE) © 2026 RunCharles974
 
 ---
 

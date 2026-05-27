@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [
-  { name = "cg97411", email = "cg97411@users.noreply.github.com" },
+  { name = "RunCharles974", email = "RunCharles974@users.noreply.github.com" },
 ]
 keywords = ["tokens", "markdown", "ocr", "pdf", "claude", "llm", "cleanup"]
 classifiers = [
@@ -73,10 +73,10 @@ trimtokens = "trimtokens.cli:app"
 trimtokens-gui = "trimtokens.gui:main"
 
 [project.urls]
-Homepage = "https://github.com/cg97411/trimtokens"
-Repository = "https://github.com/cg97411/trimtokens"
-Issues = "https://github.com/cg97411/trimtokens/issues"
-Changelog = "https://github.com/cg97411/trimtokens/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/RunCharles974/trimtokens"
+Repository = "https://github.com/RunCharles974/trimtokens"
+Issues = "https://github.com/RunCharles974/trimtokens/issues"
+Changelog = "https://github.com/RunCharles974/trimtokens/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/trimtokens"]

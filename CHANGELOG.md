@@ -274,5 +274,5 @@ et ce projet suit le [Semantic Versioning](https://semver.org/lang/fr/).
   - Classifiers PyPI dans `pyproject.toml` restent anglais (standards trove obligatoires)
   - Help typer hardcodé en anglais via click upstream (acceptable)
 
-[Unreleased]: https://github.com/cg97411/trimtokens/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/cg97411/trimtokens/releases/tag/v0.1.0
+[Unreleased]: https://github.com/RunCharles974/trimtokens/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/RunCharles974/trimtokens/releases/tag/v0.1.0
