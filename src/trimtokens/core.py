@@ -50,9 +50,7 @@ def _anonymize_document(
         parse_entities,
     )
 
-    active = strategy or build_strategy(
-        options.anon_strategy, salt=options.anon_salt
-    )
+    active = strategy or build_strategy(options.anon_strategy, salt=options.anon_salt)
     ner_entities = parse_entities(options.anon_entities)
     counts: Counter[str] = Counter()
     for section in document.sections:

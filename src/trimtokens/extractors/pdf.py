@@ -120,7 +120,9 @@ def extract(path: Path, options: ExtractOptions) -> ExtractedDocument:
         used_ocr: list[int] = []
         for i, native in enumerate(pages_native):
             ocr_text = ocr_results.get(i, "").strip()
-            if ocr_text and (options.force_ocr or len(native.strip()) < options.pdf_min_native_chars_per_page):
+            if ocr_text and (
+                options.force_ocr or len(native.strip()) < options.pdf_min_native_chars_per_page
+            ):
                 final_pages.append(ocr_text)
                 used_ocr.append(i)
             else:
@@ -181,7 +183,8 @@ def extract(path: Path, options: ExtractOptions) -> ExtractedDocument:
 
     # Marque pages "continuation" (paragraphe enchaîne) pour omettre header MD
     continuation_flags = (
-        mark_continuations(cleaned_pages) if options.merge_continuations
+        mark_continuations(cleaned_pages)
+        if options.merge_continuations
         else [False] * len(cleaned_pages)
     )
 
@@ -252,9 +255,7 @@ def _emit_image_based_warning(
     log.warning("\n".join(msg_lines))
 
 
-def _ocr_pages(
-    pdf: Any, page_indices: list[int], options: ExtractOptions
-) -> dict[int, str]:
+def _ocr_pages(pdf: Any, page_indices: list[int], options: ExtractOptions) -> dict[int, str]:
     """Rastérise les pages indiquées puis lance OCR (avec cache + parallel optionnel)."""
     from trimtokens.ocr.backend import get_backend
 
@@ -446,8 +447,7 @@ def _ocr_page_images(
     from trimtokens.ocr.parallel import parallel_map
 
     worker_args: list[tuple[bytes, int, str, str]] = [
-        (image_bytes, psm, backend.name, options.ocr_languages)
-        for image_bytes, psm in image_specs
+        (image_bytes, psm, backend.name, options.ocr_languages) for image_bytes, psm in image_specs
     ]
     return parallel_map(
         _ocr_worker,

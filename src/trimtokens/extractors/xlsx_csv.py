@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from openpyxl import load_workbook
+    from openpyxl import load_workbook  # type: ignore[import-untyped]
 except ImportError:  # pragma: no cover - dépendance optionnelle absente
     load_workbook = None  # type: ignore[assignment]
 

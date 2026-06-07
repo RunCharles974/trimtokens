@@ -83,4 +83,4 @@ def _extract_notes(slide: object) -> str:
     notes_tf = notes_slide.notes_text_frame
     if notes_tf is None:
         return ""
-    return notes_tf.text.strip()
+    return str(notes_tf.text).strip()

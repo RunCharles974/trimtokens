@@ -30,9 +30,7 @@ def is_continuation(prev_text: str, next_text: str) -> bool:
         return False
     # Ignorer un éventuel numéro de page en tête (ex. "5 principale...")
     stripped = _LEADING_PAGE_NUM_RE.sub("", next_text, count=1)
-    if not _CONTINUATION_START_RE.match(stripped):
-        return False
-    return True
+    return _CONTINUATION_START_RE.match(stripped) is not None
 
 
 def mark_continuations(pages: list[str]) -> list[bool]:

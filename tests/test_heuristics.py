@@ -74,16 +74,13 @@ def test_detect_bibliography_via_title() -> None:
 
 
 def test_detect_bibliography_via_bracket_refs() -> None:
-    text = " ".join(f"[{i}] Auteur{i}, 20{20+i}. Titre. Editeur." for i in range(1, 12))
+    text = " ".join(f"[{i}] Auteur{i}, 20{20 + i}. Titre. Editeur." for i in range(1, 12))
     is_biblio, _ = detect_bibliography(text)
     assert is_biblio
 
 
 def test_detect_bibliography_via_author_year() -> None:
-    refs = " ".join(
-        f"voir (Dupont, {2010 + i}) pour plus de détails."
-        for i in range(10)
-    )
+    refs = " ".join(f"voir (Dupont, {2010 + i}) pour plus de détails." for i in range(10))
     is_biblio, _ = detect_bibliography(refs)
     assert is_biblio
 

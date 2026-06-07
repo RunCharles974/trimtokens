@@ -17,7 +17,7 @@ on saute simplement les étapes dépendant de cv2 et on garde les fallbacks Pill
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from PIL.Image import Image as PILImage
@@ -72,7 +72,7 @@ def upscale_if_needed(image: PILImage, min_dpi: int = MIN_DPI) -> PILImage:
 
     from PIL import Image as PILImageModule
 
-    return image.resize(new_size, PILImageModule.LANCZOS)
+    return image.resize(new_size, PILImageModule.Resampling.LANCZOS)
 
 
 def deskew(image: PILImage, max_angle: float = 10.0) -> PILImage:
@@ -227,7 +227,7 @@ def crop_borders(
         return image
 
 
-def _first_above(arr, threshold: float, default: int) -> int:
+def _first_above(arr: Any, threshold: float, default: int) -> int:
     """Retourne l'index du premier élément >= threshold, sinon default."""
     for i, v in enumerate(arr):
         if v >= threshold:

@@ -127,9 +127,7 @@ class AnonymizationMap:
 
         Préférer `save_encrypted` pour des documents confidentiels.
         """
-        path.write_text(
-            json.dumps(self.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8"
-        )
+        path.write_text(json.dumps(self.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
 
     @classmethod
     def load_json(cls, path: Path) -> AnonymizationMap:
@@ -168,7 +166,9 @@ class AnonymizationMap:
         try:
             payload = fernet.decrypt(token)
         except Exception as exc:  # InvalidToken et dérivés
-            raise MappingError("Déchiffrement impossible : passphrase erronée ou fichier altéré.") from exc
+            raise MappingError(
+                "Déchiffrement impossible : passphrase erronée ou fichier altéré."
+            ) from exc
         data = json.loads(payload.decode("utf-8"))
         if not isinstance(data, dict):
             raise MappingError("Contenu déchiffré inattendu.")

@@ -133,9 +133,7 @@ def _print_profile_table(result: ProcessResult) -> None:
     """Affiche le breakdown StepMetrics agrégé (flag CLI --profile)."""
     from trimtokens.cleaners.steps import StepMetrics
 
-    metrics: list[StepMetrics] = [
-        m for m in result.pipeline_metrics if isinstance(m, StepMetrics)
-    ]
+    metrics: list[StepMetrics] = [m for m in result.pipeline_metrics if isinstance(m, StepMetrics)]
     if not metrics:
         console.print("[dim italic]Aucune métrique de pipeline disponible.[/dim italic]")
         return

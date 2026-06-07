@@ -83,9 +83,7 @@ def register_backend(backend: OCREngine, *, replace: bool = False) -> None:
     if not name:
         raise ValueError("Backend OCR sans `name` non enregistrable.")
     if name in _BACKENDS and not replace:
-        raise ValueError(
-            f"Backend OCR '{name}' déjà enregistré. Passez replace=True pour écraser."
-        )
+        raise ValueError(f"Backend OCR '{name}' déjà enregistré. Passez replace=True pour écraser.")
     _BACKENDS[name] = backend
     log.debug("Backend OCR enregistré : %s", name)
 

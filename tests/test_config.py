@@ -149,9 +149,7 @@ def test_partial_config_merged_with_defaults(tmp_path: Path) -> None:
     assert cfg.ocr.psm == OCRConfig().psm
 
 
-def test_trimtokens_home_env_override(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_trimtokens_home_env_override(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     from trimtokens.config import get_config_path, get_home
 
     monkeypatch.setenv("TRIMTOKENS_HOME", str(tmp_path))

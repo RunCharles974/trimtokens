@@ -61,7 +61,7 @@ jobs:
       - name: Install package + build deps (Installer paquet et dépendances de build)
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[ocr,gui,dev]"
+          pip install -e ".[all]"
 
       - name: Run tests before build (Exécuter les tests avant build)
         run: pytest -x --tb=short

@@ -215,7 +215,9 @@ _IBAN_RE: Final = re.compile(
 _SIRET_RE: Final = re.compile(r"(?<!\d)\d{3}[\s]?\d{3}[\s]?\d{3}[\s]?\d{5}(?!\d)")
 _SIREN_RE: Final = re.compile(r"(?<!\d)\d{3}[\s]?\d{3}[\s]?\d{3}(?!\d)")
 
-_VAT_RE: Final = re.compile(r"(?<![A-Za-z0-9])FR\s?[0-9A-Z]{2}\s?\d{3}\s?\d{3}\s?\d{3}(?![A-Za-z0-9])")
+_VAT_RE: Final = re.compile(
+    r"(?<![A-Za-z0-9])FR\s?[0-9A-Z]{2}\s?\d{3}\s?\d{3}\s?\d{3}(?![A-Za-z0-9])"
+)
 
 # NIR : sexe(1) année(2) mois(2) dépt(2, incl. 2A/2B) commune(3) ordre(3) clé(2).
 _NIR_RE: Final = re.compile(

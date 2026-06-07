@@ -80,11 +80,15 @@ anonymize = [
   "spacy>=3.7",
   "cryptography>=42",
 ]
+# Outils de qualité épinglés : ruff/mypy non bornés laissaient la CI installer
+# des versions majeures plus récentes (ruff 0.15, mypy 2.x) qui reformatent tout
+# le repo et changent les règles de type → CI rouge sur du code non modifié.
+# Versions figées = local == CI, reproductible.
 dev = [
-  "pytest>=8.0",
+  "pytest>=8.0,<9",
   "pytest-cov>=5.0",
-  "ruff>=0.5",
-  "mypy>=1.10",
+  "ruff==0.15.14",
+  "mypy==1.14.1",
   "pyinstaller>=6.5",
   "types-PyYAML",
 ]
@@ -147,6 +151,11 @@ strict = true
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
+# Les paquets optionnels (Pillow, opencv, pytesseract…) font évoluer leurs stubs :
+# un `# type: ignore` requis hier devient « inutile » demain. On désactive cette
+# alerte pour éviter que la CI casse à chaque mise à jour de stub, tout en gardant
+# le reste du mode strict.
+warn_unused_ignores = false
 files = ["src", "tests"]
 
 [[tool.mypy.overrides]]
@@ -163,6 +172,7 @@ module = [
   "presidio_analyzer.*",
   "presidio_anonymizer.*",
   "spacy",
+  "cryptography.*",
 ]
 ignore_missing_imports = true
 

@@ -41,7 +41,9 @@ _BIBLIO_TITLE_RE = re.compile(
 
 # Patterns de références : [N], (Auteur, 2024), Auteur, J. (2024)
 _REF_BRACKET_RE = re.compile(r"\[\d{1,4}\]")
-_REF_AUTHOR_YEAR_RE = re.compile(r"\([A-Z][a-zéèêA-Z]+(?:\s+(?:et\s+al\.?|&)\s*[A-Z]?[a-z]*)?,?\s+\d{4}\)")
+_REF_AUTHOR_YEAR_RE = re.compile(
+    r"\([A-Z][a-zéèêA-Z]+(?:\s+(?:et\s+al\.?|&)\s*[A-Z]?[a-z]*)?,?\s+\d{4}\)"
+)
 _REF_NUMBERED_LINE_RE = re.compile(r"^\s*\d{1,3}\.\s+[A-Z]", re.MULTILINE)
 
 # Seuils par défaut (configurables via ExtractOptions plus tard si besoin)
@@ -106,7 +108,10 @@ def detect_bibliography(text: str) -> tuple[bool, str]:
     total = bracket + author_year + numbered
 
     if total >= BIBLIO_MIN_REFS:
-        return True, f"{total} références ({bracket} [N], {author_year} (auteur,année), {numbered} numérotées)"
+        return (
+            True,
+            f"{total} références ({bracket} [N], {author_year} (auteur,année), {numbered} numérotées)",
+        )
 
     return False, ""
 

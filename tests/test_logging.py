@@ -176,7 +176,9 @@ def test_core_process_emits_extraction_events(tmp_path: Path) -> None:
     process(src)
 
     teardown_logging()
-    events = [json.loads(line)["event"] for line in log_path.read_text(encoding="utf-8").splitlines()]
+    events = [
+        json.loads(line)["event"] for line in log_path.read_text(encoding="utf-8").splitlines()
+    ]
     assert Events.EXTRACTION_START in events
     assert Events.EXTRACTION_COMPLETE in events
 

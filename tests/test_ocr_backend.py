@@ -120,9 +120,7 @@ def test_extract_options_default_backend() -> None:
     assert opts.ocr_backend == "tesseract"
 
 
-def test_image_extractor_uses_registered_backend(
-    tmp_path, fake_backend: FakeBackend
-) -> None:
+def test_image_extractor_uses_registered_backend(tmp_path, fake_backend: FakeBackend) -> None:
     """L'extracteur image route bien vers le backend nommé dans ExtractOptions."""
     from PIL import Image
 

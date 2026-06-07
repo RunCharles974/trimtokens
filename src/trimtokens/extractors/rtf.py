@@ -26,7 +26,7 @@ def extract(path: Path, options: ExtractOptions) -> ExtractedDocument:
             "Installez-le via : pip install striprtf"
         )
     raw = path.read_text(encoding="utf-8", errors="replace")
-    text = rtf_to_text(raw)
+    text = rtf_to_text(raw)  # type: ignore[no-untyped-call]
 
     return ExtractedDocument(
         source_path=path,

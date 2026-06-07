@@ -65,8 +65,13 @@ def test_cli_anonymize_and_deanonymize_roundtrip(tmp_path: Path) -> None:
     # Dé-anonymisation : restaure les valeurs réelles depuis la table.
     deanon = runner.invoke(
         app,
-        [str(tmp_path / "contrat.clean.md"), "--deanonymize", "--anon-map-out", str(map_path),
-         "--quiet"],
+        [
+            str(tmp_path / "contrat.clean.md"),
+            "--deanonymize",
+            "--anon-map-out",
+            str(map_path),
+            "--quiet",
+        ],
     )
     assert deanon.exit_code == 0
     restored = (tmp_path / "contrat.clean.deanon.md").read_text(encoding="utf-8")

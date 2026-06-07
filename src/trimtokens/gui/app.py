@@ -441,10 +441,7 @@ class TrimTokensGUI:
         self._log(msg, target)
 
         # Avertissement PDF image-based sans OCR effectif
-        if (
-            result.document.metadata.get("image_based")
-            and not result.document.ocr_used
-        ):
+        if result.document.metadata.get("image_based") and not result.document.ocr_used:
             metrics = result.document.metadata.get("image_based_metrics", {})
             avg_chars = metrics.get("avg_chars_per_page", 0) if isinstance(metrics, dict) else 0
             avg_images = metrics.get("avg_images_per_page", 0) if isinstance(metrics, dict) else 0
@@ -555,9 +552,7 @@ class TrimTokensGUI:
         tokens_before = sum(r.tokens_before for r in self.state.results)
         tokens_after = sum(r.tokens_after for r in self.state.results)
         size_gain = round((1 - total_after / total_before) * 100, 1) if total_before > 0 else 0
-        tok_gain = (
-            round((1 - tokens_after / tokens_before) * 100, 1) if tokens_before > 0 else 0
-        )
+        tok_gain = round((1 - tokens_after / tokens_before) * 100, 1) if tokens_before > 0 else 0
         self.recap_label.configure(
             text=(
                 f"{successes}/{len(self.state.results)} OK  •  "

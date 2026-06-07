@@ -140,7 +140,7 @@ def ocr_pil_image(
         import pytesseract  # type: ignore[import-untyped]
 
         config = f"--oem 3 --psm {psm}"
-        return pytesseract.image_to_string(image, lang=languages, config=config)
+        return str(pytesseract.image_to_string(image, lang=languages, config=config))
     except Exception as exc:
         log.warning("OCR Tesseract échoué : %s", exc)
         return ""
