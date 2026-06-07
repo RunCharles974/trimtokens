@@ -28,9 +28,8 @@ jobs:
           - os: windows-latest
             os_label: windows
             arch: x64
-          - os: macos-13
-            os_label: macos
-            arch: x64
+          # macOS Intel (macos-13) retiré : runners GitHub rares/en fin de vie,
+          # bloquaient la publication. Les Mac récents sont Apple Silicon (arm64).
           - os: macos-14
             os_label: macos
             arch: arm64
@@ -130,7 +129,6 @@ jobs:
             | OS | Architecture | CLI | GUI |
             |---|---|---|---|
             | Windows | x64 | `trimtokens-windows-x64.exe` | `trimtokens-gui-windows-x64.exe` |
-            | macOS | Intel | `trimtokens-macos-x64` | `trimtokens-gui-macos-x64` |
             | macOS | Apple Silicon | `trimtokens-macos-arm64` | `trimtokens-gui-macos-arm64` |
             | Linux | x64 | `trimtokens-linux-x64` | `trimtokens-gui-linux-x64` |
 
