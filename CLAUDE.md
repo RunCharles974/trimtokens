@@ -1,8 +1,12 @@
 ﻿# TrimTokens — Project Memory
 
-> *Allégez vos documents pour l'IA, en local. — Lighten your docs locally, AI-ready.*
+> *Compressez ET anonymisez vos documents pour l'IA, en local. — Compress & anonymize your docs locally, AI-ready.*
 
-Outil Python local qui transforme PDF/DOCX/PPTX/XLSX/images/HTML en Markdown compact pour réduire tokens Claude/IA de 90+ %. Anciennement nommé TokensClean (dossier `C:\TrimTokens\` conservé pour compat).
+Outil Python local qui transforme PDF/DOCX/PPTX/XLSX/images/HTML en Markdown pour l'IA, avec **deux objectifs** :
+1. **Compression** : réduire les tokens Claude/IA de 90+ % (nettoyage, OCR, filtrage).
+2. **Anonymisation** : caviarder les données personnelles (PII) des documents confidentiels (contrats, courriers) — pseudonymisation réversible, 100 % offline.
+
+Le nom `trimtokens` (package/dossier/env) reste l'identifiant technique stable ; l'anonymisation est une seconde mission de premier plan, pas un simple module. Anciennement TokensClean.
 
 Spec complète : [`TrimTokens.md`](./TrimTokens.md).
 

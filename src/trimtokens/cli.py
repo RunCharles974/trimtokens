@@ -34,8 +34,8 @@ from trimtokens.models import ExtractOptions, ProcessResult
 
 app = typer.Typer(
     name="trimtokens",
-    help="Convertit documents (PDF, DOCX, PPTX, XLSX, images, HTML) en Markdown compact "
-    "pour réduire la consommation de tokens Claude.",
+    help="Compresse et anonymise vos documents (PDF, DOCX, PPTX, XLSX, images, HTML) "
+    "en Markdown pour l'IA, 100 % en local : moins de tokens, données personnelles caviardées.",
     add_completion=False,
     no_args_is_help=True,
     rich_markup_mode="rich",

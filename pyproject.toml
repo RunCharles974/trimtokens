@@ -5,14 +5,17 @@ build-backend = "hatchling.build"
 [project]
 name = "trimtokens"
 version = "0.2.0"
-description = "Convertit documents (PDF/DOCX/PPTX/XLSX/images/HTML) en Markdown compact pour reduire la consommation de tokens Claude"
+description = "Compresse ET anonymise vos documents (PDF/DOCX/PPTX/XLSX/images/HTML) en Markdown pour l'IA, 100 % en local : moins de tokens, donnees personnelles caviardees"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [
   { name = "RunCharles974", email = "RunCharles974@users.noreply.github.com" },
 ]
-keywords = ["tokens", "markdown", "ocr", "pdf", "claude", "llm", "cleanup"]
+keywords = [
+  "tokens", "markdown", "ocr", "pdf", "claude", "llm", "cleanup",
+  "anonymization", "pii", "privacy", "rgpd", "redaction", "local",
+]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
@@ -23,6 +26,7 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Topic :: Text Processing :: Markup",
+  "Topic :: Security",
   "Topic :: Utilities",
 ]
 # Core dependencies — minimum requis pour CLI/pipeline/cleaners + formats texte

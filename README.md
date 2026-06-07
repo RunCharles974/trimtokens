@@ -1,9 +1,14 @@
 # TrimTokens
 
-> **Allégez vos documents pour l'IA, en local.**
-> *Lighten your docs locally, AI-ready.*
+> **Compressez ET anonymisez vos documents pour l'IA, en local.**
+> *Compress & anonymize your docs locally, AI-ready.*
 
-Convertit n'importe quel document (PDF, DOCX, PPTX, XLSX, images, HTML…) en **Markdown propre, compact et prêt à coller dans Claude**, pour réduire massivement la consommation de tokens. **100 % local, zéro upload.**
+Convertit n'importe quel document (PDF, DOCX, PPTX, XLSX, images, HTML…) en **Markdown propre, prêt à coller dans Claude**, avec deux objectifs :
+
+- 🪶 **Compresser** — réduire massivement la consommation de tokens (nettoyage, OCR, filtrage).
+- 🕵 **Anonymiser** — caviarder les données personnelles (noms, IBAN, SIRET, NIR…) des documents confidentiels, avec pseudonymisation **réversible**.
+
+**100 % local, zéro upload, zéro fuite.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
@@ -21,6 +26,8 @@ Les documents bruts envoyés à Claude (et autres LLM) contiennent énormément 
 
 **TrimTokens élimine tout ce bruit avant l'envoi à un LLM.** Objectif chiffré : **60 à 90 % de réduction des tokens** sans perte d'information sémantique.
 
+Et pour les **documents confidentiels** (contrats, courriers, fiches RH), TrimTokens va plus loin : il **anonymise les données personnelles en local** avant tout envoi à une IA, avec une table de correspondance chiffrée pour ré-identifier ensuite. Voir la section [Anonymisation](#anonymisation-documents-confidentiels).
+
 ### Exemple de gains observés
 
 | Type de document | Taille avant | Tokens avant | Tokens après | Gain |
@@ -36,6 +43,7 @@ Les documents bruts envoyés à Claude (et autres LLM) contiennent énormément 
 ## Caractéristiques
 
 - 🔒 **100 % local** — aucun appel réseau, aucune fuite de données
+- 🕵 **Anonymisation PII** — email, IBAN, SIRET, NIR, noms… détectés et caviardés ; pseudonymisation réversible, table chiffrée
 - 🖥️ **Multi-plateforme** — Windows, macOS, Linux
 - 📦 **Portable** — installable via pip, pipx ou en exécutable standalone
 - 🎨 **CLI et GUI** — drag & drop natif depuis l'explorateur
