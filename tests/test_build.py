@@ -36,6 +36,14 @@ def test_build_py_importable() -> None:
     assert hasattr(mod, "build_gui")
 
 
+def test_entry_scripts_exist() -> None:
+    # Garde anti-régression : un point d'entrée obsolète (ex. `gui.py` après le
+    # passage de la GUI en package) casse le build release silencieusement.
+    mod = _load_build_module()
+    assert mod.CLI_ENTRY.exists(), f"Entrée CLI introuvable : {mod.CLI_ENTRY}"
+    assert mod.GUI_ENTRY.exists(), f"Entrée GUI introuvable : {mod.GUI_ENTRY}"
+
+
 def test_detect_platform_returns_known_os() -> None:
     mod = _load_build_module()
     os_name, arch = mod.detect_platform()

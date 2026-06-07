@@ -29,6 +29,12 @@ SRC = ROOT / "src"
 DIST = ROOT / "dist"
 BUILD = ROOT / "build"
 
+# Points d'entrée PyInstaller. La CLI est un module, la GUI un package (entrée
+# `__main__.py`). Centralisés ici pour être testés (cf test_build.py) — un chemin
+# obsolète casse silencieusement le build release.
+CLI_ENTRY = SRC / "trimtokens" / "cli.py"
+GUI_ENTRY = SRC / "trimtokens" / "gui" / "__main__.py"
+
 
 # Hidden imports nécessaires pour que PyInstaller embarque tout ce que le code
 # importe dynamiquement (importlib.import_module dans core.py, deps optionnelles).
@@ -160,8 +166,7 @@ def build_cli(os_name: str, arch: str, clean: bool) -> Path:
     for module in HIDDEN_IMPORTS_BASE:
         cmd.extend(["--hidden-import", module])
 
-    entry = SRC / "trimtokens" / "cli.py"
-    cmd.append(str(entry))
+    cmd.append(str(CLI_ENTRY))
 
     print(f"\n=== Build CLI : {name} ===")
     print(" ".join(str(c) for c in cmd))
@@ -192,8 +197,9 @@ def build_gui(os_name: str, arch: str, clean: bool, debug: bool = False) -> Path
     # Collect submodules dynamiques de customtkinter (thèmes JSON, assets)
     cmd.extend(["--collect-all", "customtkinter"])
 
-    entry = SRC / "trimtokens" / "gui.py"
-    cmd.append(str(entry))
+    # La GUI est un package (`gui/`), pas un module `gui.py` : on cible son
+    # point d'entrée `__main__.py` (équivalent de `python -m trimtokens.gui`).
+    cmd.append(str(GUI_ENTRY))
 
     print(f"\n=== Build GUI : {name} ===")
     print(" ".join(str(c) for c in cmd))
@@ -232,13 +238,16 @@ def main() -> int:
     if not args.cli_only:
         outputs.append(build_gui(os_name, arch, args.clean, debug=args.debug))
 
-    print("\n=== Build terminé ===")
+    # Marqueurs ASCII (pas de glyphes ✓/✗) : sur un runner CI Windows, stdout est
+    # redirigé en cp1252 et un caractère Unicode ferait planter le build avec
+    # UnicodeEncodeError — exactement le genre d'échec qui casse `release.yml`.
+    print("\n=== Build termine ===")
     for path in outputs:
         if path.exists():
             size_mb = path.stat().st_size / (1024 * 1024)
-            print(f"  ✓ {path}  ({size_mb:.1f} Mo)")
+            print(f"  [OK] {path}  ({size_mb:.1f} Mo)")
         else:
-            print(f"  ✗ {path}  (fichier introuvable !)")
+            print(f"  [ERREUR] {path}  (fichier introuvable !)")
             return 1
 
     return 0

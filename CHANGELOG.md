@@ -42,6 +42,11 @@ et ce projet suit le [Semantic Versioning](https://semver.org/lang/fr/).
 - Windows : les glyphes Rich (`✓`, `⚠`, `→`) ne font plus planter la CLI avec
   `UnicodeEncodeError` sur une console ou un pipe en cp1252. Les flux stdout/stderr
   sont forcés en UTF-8 (errors=replace) au démarrage.
+- Build release : `build.py` ciblait `src/trimtokens/gui.py`, obsolète depuis le
+  passage de la GUI en package `gui/` — le build GUI échouait sur les 4 OS.
+  Corrigé vers `gui/__main__.py` (constantes `CLI_ENTRY`/`GUI_ENTRY` + test
+  anti-régression). Glyphes `✓`/`✗` du résumé `build.py` remplacés par des
+  marqueurs ASCII (plantaient le runner CI Windows en cp1252).
 
 ### Changed (BREAKING)
 - Dépendances format binaire déplacées en extras (cf audit §Packaging
