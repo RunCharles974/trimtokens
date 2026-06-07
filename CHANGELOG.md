@@ -7,6 +7,42 @@ et ce projet suit le [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-07
+
+### Added
+- **Anonymisation des données personnelles (PII)** — traitement local de
+  documents confidentiels (contrats, courriers, fiches RH). Package
+  `trimtokens.anonymizer` :
+  - Détection regex FR **validée** (Luhn, modulo 97 IBAN, clé NIR, clé TVA) :
+    email, téléphone FR, IBAN, SIREN, SIRET, TVA intracommunautaire, NIR
+    (sécurité sociale), carte bancaire, plaque d'immatriculation.
+  - Détection NER optionnelle (noms, sociétés, lieux) via Presidio + spaCy
+    `fr_core_news_lg`, extra `[anonymize]`. Fallback regex-only silencieux si
+    absent — jamais bloquant.
+  - 4 stratégies : `pseudonymize` (réversible, défaut), `redact`, `hash`,
+    `partial`. Pseudonymes **cohérents sur tout un lot** de documents.
+  - Table de correspondance réversible, persistée en JSON ou **chiffrée**
+    (Fernet, clé dérivée scrypt) via `--passphrase`. Jamais incluse dans la
+    sortie Markdown.
+  - Précision NER réglable : par défaut seules les **personnes** sont
+    anonymisées (les organisations/lieux génèrent trop de faux positifs sur du
+    texte administratif FR). `--anon-entities personne,lieu,organisation` (ou
+    `all`) pour élargir, `--anon-min-score` pour relever le seuil de confiance,
+    plus un filtre anti-bruit (valeurs < 3 caractères, civilités/formules).
+  - CLI : `--anonymize`, `--anon-strategy`, `--anon-salt`, `--no-ner`,
+    `--anon-entities`, `--anon-min-score`, `--anon-map-out`, `--passphrase`,
+    et mode inverse `--deanonymize`.
+  - GUI : case « 🕵 Anonymiser (PII) », table écrite à côté des sorties.
+  - Front-matter YAML enrichi : `anonymized: true` + compteurs par type
+    (jamais les valeurs réelles).
+  - Rappel de sécurité affiché : l'anonymisation automatique n'est pas garantie
+    à 100 %, relecture avant diffusion recommandée.
+
+### Fixed
+- Windows : les glyphes Rich (`✓`, `⚠`, `→`) ne font plus planter la CLI avec
+  `UnicodeEncodeError` sur une console ou un pipe en cp1252. Les flux stdout/stderr
+  sont forcés en UTF-8 (errors=replace) au démarrage.
+
 ### Changed (BREAKING)
 - Dépendances format binaire déplacées en extras (cf audit §Packaging
   "Séparer davantage les extras"). `pip install trimtokens` n'installe plus
@@ -291,5 +327,6 @@ et ce projet suit le [Semantic Versioning](https://semver.org/lang/fr/).
   - Classifiers PyPI dans `pyproject.toml` restent anglais (standards trove obligatoires)
   - Help typer hardcodé en anglais via click upstream (acceptable)
 
-[Unreleased]: https://github.com/RunCharles974/trimtokens/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/RunCharles974/trimtokens/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/RunCharles974/trimtokens/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/RunCharles974/trimtokens/releases/tag/v0.1.0

@@ -5,8 +5,10 @@ from __future__ import annotations
 import importlib
 import logging
 import time
+from collections import Counter
 from collections.abc import Callable
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from trimtokens.cleaners import clean
 from trimtokens.cleaners.steps import StepMetrics, aggregate_metrics
@@ -22,9 +24,55 @@ from trimtokens.models import (
 from trimtokens.renderer import render
 from trimtokens.stats import compute_stats
 
+if TYPE_CHECKING:
+    from trimtokens.anonymizer.strategies import Strategy
+
 log = logging.getLogger(__name__)
 
 ExtractorFn = Callable[[Path, ExtractOptions], ExtractedDocument]
+
+
+def _anonymize_document(
+    document: ExtractedDocument,
+    options: ExtractOptions,
+    strategy: Strategy | None,
+) -> tuple[bool, dict[str, int], object | None]:
+    """Anonymise en place le contenu des sections de `document`.
+
+    `strategy` partagée (typiquement à travers un lot) assure des pseudonymes
+    cohérents entre sections et documents. Si `None`, construite depuis
+    `options`. Retourne `(anonymized, counts, mapping)`.
+    """
+    from trimtokens.anonymizer import (
+        PseudonymizeStrategy,
+        anonymize_text,
+        build_strategy,
+        parse_entities,
+    )
+
+    active = strategy or build_strategy(
+        options.anon_strategy, salt=options.anon_salt
+    )
+    ner_entities = parse_entities(options.anon_entities)
+    counts: Counter[str] = Counter()
+    for section in document.sections:
+        if not section.content.strip():
+            continue
+        result = anonymize_text(
+            section.content,
+            strategy=active,
+            use_ner=options.anon_ner,
+            ner_language=options.anon_ner_languages,
+            ner_entities=ner_entities,
+            ner_min_score=options.anon_min_score,
+        )
+        section.content = result.text
+        counts.update({k.value: v for k, v in result.counts.items()})
+
+    mapping = active.mapping if isinstance(active, PseudonymizeStrategy) else None
+    document.metadata["anonymized"] = True
+    document.metadata["anon_counts"] = dict(counts)
+    return True, dict(counts), mapping
 
 
 def _resolve_extractor(ext: str) -> ExtractorFn:
@@ -36,8 +84,18 @@ def _resolve_extractor(ext: str) -> ExtractorFn:
     return extractor
 
 
-def process(path: Path, options: ExtractOptions | None = None) -> ProcessResult:
-    """Pipeline complet : extraction + nettoyage par section + rendu Markdown."""
+def process(
+    path: Path,
+    options: ExtractOptions | None = None,
+    *,
+    anon_strategy: Strategy | None = None,
+) -> ProcessResult:
+    """Pipeline complet : extraction + nettoyage par section + rendu Markdown.
+
+    `anon_strategy` (optionnel) : stratégie d'anonymisation partagée entre
+    plusieurs appels `process` pour garantir des pseudonymes cohérents sur tout
+    un lot de documents. Ignorée si `options.anonymize` est faux.
+    """
     if options is None:
         options = ExtractOptions()
 
@@ -96,6 +154,12 @@ def process(path: Path, options: ExtractOptions | None = None) -> ProcessResult:
         original_text=original_text,
     )
 
+    anonymized = False
+    anon_counts: dict[str, int] = {}
+    anon_map: object | None = None
+    if options.anonymize:
+        anonymized, anon_counts, anon_map = _anonymize_document(document, options, anon_strategy)
+
     markdown = render(document, stats)
     duration_ms = round((time.perf_counter() - t_start) * 1000, 2)
     log_event(
@@ -124,4 +188,7 @@ def process(path: Path, options: ExtractOptions | None = None) -> ProcessResult:
         stats=stats,
         markdown=markdown,
         pipeline_metrics=list(pipeline_metrics),
+        anonymized=anonymized,
+        anon_counts=anon_counts,
+        anon_map=anon_map,
     )

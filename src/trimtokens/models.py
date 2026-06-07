@@ -44,6 +44,21 @@ class ExtractOptions:
     # Backend OCR (registry `ocr.backend.get_backend(name)`). Défaut : Tesseract.
     # Autres impls possibles via `register_backend(...)` : EasyOCR, PaddleOCR, cloud, …
     ocr_backend: str = "tesseract"
+    # Anonymisation PII (opt-in). Quand `anonymize=True`, les données personnelles
+    # détectées sont substituées avant rendu. `anon_strategy` ∈
+    # {pseudonymize, redact, hash, partial}. `anon_salt` ne sert qu'à `hash`.
+    # `anon_ner` active la reconnaissance d'entités nommées (noms/sociétés/lieux)
+    # si l'extra [anonymize] est installé ; sinon fallback regex-only silencieux.
+    anonymize: bool = False
+    anon_strategy: str = "pseudonymize"
+    anon_salt: str = ""
+    anon_ner: bool = True
+    anon_ner_languages: str = "fr"
+    # Entités NER à cibler (CSV : personne,lieu,organisation ou "all"). Défaut
+    # PERSONNE seule = meilleure précision (cf faux positifs ORG/LIEU sur texte
+    # administratif FR). `anon_min_score` filtre les détections NER peu confiantes.
+    anon_entities: str = "personne"
+    anon_min_score: float = 0.5
 
 
 @dataclass
@@ -113,3 +128,11 @@ class ProcessResult:
     stats: CleanStats
     markdown: str
     pipeline_metrics: list[object] = field(default_factory=list)  # list[StepMetrics]
+    # Anonymisation (rempli uniquement si options.anonymize). `anon_counts` :
+    # nombre de PII substituées par type ({"EMAIL": 3, "PERSONNE": 5}).
+    # `anon_map` : table de réversibilité (None pour stratégies irréversibles
+    # redact/hash/partial). Typé `object` pour éviter d'importer le module
+    # anonymizer ici (dépendances optionnelles).
+    anonymized: bool = False
+    anon_counts: dict[str, int] = field(default_factory=dict)
+    anon_map: object | None = None

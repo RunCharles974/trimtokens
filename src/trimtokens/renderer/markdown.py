@@ -50,6 +50,13 @@ def build_frontmatter(
     filtered = document.metadata.get("filtered_pages")
     if filtered:
         data["filtered_pages"] = filtered
+    # Anonymisation : signale que le document a été caviardé + compteurs par type.
+    # Ne contient JAMAIS les valeurs réelles (réservées à la table de mapping).
+    if document.metadata.get("anonymized"):
+        data["anonymized"] = True
+        counts = document.metadata.get("anon_counts")
+        if counts:
+            data["anonymized_entities"] = counts
     # Flag PDF image-based (avertit l'utilisateur que le contenu nécessite OCR)
     if document.metadata.get("image_based"):
         data["image_based"] = True

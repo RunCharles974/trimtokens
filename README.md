@@ -230,6 +230,50 @@ trimtokens --help
 
 ---
 
+## Anonymisation (documents confidentiels)
+
+Traite et **caviarde les données personnelles** de contrats ou documents
+sensibles, 100 % en local, sans aucun appel réseau.
+
+```bash
+# Pseudonymisation réversible d'un dossier entier, table chiffrée
+trimtokens ./contrats/ --recursive --anonymize \
+    --anon-map-out ./contrats.map.enc --passphrase "ma-phrase-secrète"
+
+# Envoyer le Markdown anonymisé à l'IA, puis restaurer les vraies valeurs
+trimtokens ./contrats/contrat.clean.md --deanonymize \
+    --anon-map-out ./contrats.map.enc --passphrase "ma-phrase-secrète"
+```
+
+Détection :
+
+- **Regex validées** (sans dépendance) : email, téléphone FR, IBAN, SIREN,
+  SIRET, TVA, NIR (sécurité sociale), carte bancaire, plaque. Chaque détection
+  est validée arithmétiquement (Luhn, modulo 97, clé NIR) → peu de faux positifs.
+- **Noms / sociétés / lieux** (optionnel) via l'extra `[anonymize]` :
+  ```bash
+  pip install 'trimtokens[anonymize]'
+  python -m spacy download fr_core_news_lg
+  ```
+  Sans cet extra, la détection retombe automatiquement sur les regex seules.
+
+Stratégies (`--anon-strategy`) :
+
+| Stratégie | Exemple | Réversible |
+|-----------|---------|------------|
+| `pseudonymize` (défaut) | `Jean Dupont` → `[PERSONNE_1]` | ✅ (avec la table) |
+| `redact` | `Jean Dupont` → `[PERSONNE]` | ❌ |
+| `hash` | `Jean Dupont` → `[PERSONNE_a3f91c2b]` | ❌ |
+| `partial` | `jean@example.fr` → `j***@example.fr` | ❌ |
+
+Les pseudonymes sont **cohérents sur tout le lot** : une même valeur reçoit le
+même tag dans tous les fichiers traités. La table de correspondance n'est
+**jamais** incluse dans la sortie Markdown.
+
+> ⚠️ L'anonymisation automatique n'est pas garantie à 100 %. Relisez toujours le
+> document (le récapitulatif des entités détectées s'affiche en fin de
+> traitement) avant de le transmettre.
+
 ## Utilisation GUI
 
 ```bash

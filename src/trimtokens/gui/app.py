@@ -191,6 +191,7 @@ class TrimTokensGUI:
         self.open_after_var = ctk.BooleanVar(value=False)
         self.force_ocr_var = ctk.BooleanVar(value=False)
         self.smart_filter_var = ctk.BooleanVar(value=False)
+        self.anonymize_var = ctk.BooleanVar(value=False)
 
         ctk.CTkCheckBox(options, text="Mode agressif", variable=self.aggressive_var).grid(
             row=1, column=0, columnspan=2, sticky="w", padx=4, pady=2
@@ -208,7 +209,12 @@ class TrimTokensGUI:
             options,
             text="🧠 Filtre intelligent (TOC/biblio/éparses)",
             variable=self.smart_filter_var,
-        ).grid(row=2, column=0, columnspan=5, sticky="w", padx=4, pady=2)
+        ).grid(row=2, column=0, columnspan=3, sticky="w", padx=4, pady=2)
+        ctk.CTkCheckBox(
+            options,
+            text="🕵 Anonymiser (PII)",
+            variable=self.anonymize_var,
+        ).grid(row=2, column=3, columnspan=2, sticky="w", padx=4, pady=2)
 
         # Progress
         self.progress = ctk.CTkProgressBar(parent)
@@ -405,6 +411,7 @@ class TrimTokensGUI:
             aggressive=self.aggressive_var.get(),
             force_ocr=self.force_ocr_var.get(),
             smart_filter=self.smart_filter_var.get(),
+            anonymize=self.anonymize_var.get(),
         )
 
     # ------------------------------------------------------------------

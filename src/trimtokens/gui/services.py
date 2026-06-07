@@ -79,6 +79,10 @@ class ProcessingService:
         last_output_text = ""
         success_count = 0
 
+        # Stratégie d'anonymisation partagée sur le lot → pseudonymes cohérents
+        # entre fichiers (cf core.process). None si anonymisation désactivée.
+        shared_strategy = self._build_anon_strategy(options)
+
         for i, file_path in enumerate(files):
             if self._cancel.is_set():
                 break
@@ -91,7 +95,7 @@ class ProcessingService:
 
             try:
                 start = time.perf_counter()
-                result = process(file_path, options)
+                result = process(file_path, options, anon_strategy=shared_strategy)
                 duration = time.perf_counter() - start
 
                 target = file_path.parent / (file_path.stem + ".clean.md")
@@ -106,12 +110,39 @@ class ProcessingService:
                 entry = FileResult(file=file_path.name, target=None, status="✗")
                 self._dispatch(callbacks.on_file_failure, file_path, exc, entry)
 
+        self._save_anon_map(shared_strategy, last_output_path)
+
         self._dispatch(
             callbacks.on_progress,
             1.0,
             f"Terminé : {success_count}/{total} succès",
         )
         self._dispatch(callbacks.on_complete, last_output_path, last_output_text)
+
+    @staticmethod
+    def _build_anon_strategy(options: ExtractOptions) -> Any | None:
+        """Construit la stratégie d'anonymisation partagée si l'option est active."""
+        if not options.anonymize:
+            return None
+        from trimtokens.anonymizer import build_strategy
+
+        return build_strategy(options.anon_strategy, salt=options.anon_salt)
+
+    @staticmethod
+    def _save_anon_map(strategy: Any | None, last_output: Path | None) -> None:
+        """Écrit la table de correspondance (JSON clair) à côté des sorties.
+
+        La GUI n'expose pas de passphrase : table en clair, à protéger par
+        l'utilisateur. Réversibilité via la commande CLI `--deanonymize`.
+        """
+        if strategy is None or last_output is None:
+            return
+        from trimtokens.anonymizer import PseudonymizeStrategy
+
+        if not isinstance(strategy, PseudonymizeStrategy) or len(strategy.mapping) == 0:
+            return
+        map_path = last_output.parent / "trimtokens.anon.map.json"
+        strategy.mapping.save_json(map_path)
 
 
 def _build_success_entry(

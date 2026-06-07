@@ -12,10 +12,12 @@ Usage typique :
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 import sys
 import time
+from collections import Counter
 from pathlib import Path
 
 import typer
@@ -51,6 +53,23 @@ def _version_callback(value: bool) -> None:
     if value:
         console.print(f"trimtokens v{__version__}")
         raise typer.Exit()
+
+
+def _force_utf8_streams() -> None:
+    """Force stdout/stderr en UTF-8 (errors=replace).
+
+    Sous Windows, une console ou un pipe en cp1252 fait planter l'écriture des
+    glyphes Rich (✓, ⚠, →) avec `UnicodeEncodeError`. On reconfigure les flux en
+    UTF-8 tolérant pour garantir l'affichage portable (cf contrainte « Portable
+    Windows »). No-op si le flux n'expose pas `reconfigure` (déjà encapsulé).
+    """
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is None:
+            continue
+        # flux détaché / non reconfigurable → on ignore silencieusement
+        with contextlib.suppress(ValueError, OSError):
+            reconfigure(encoding="utf-8", errors="replace")
 
 
 def _setup_logging(quiet: bool, verbose: bool, json_file: Path | None = None) -> None:
@@ -264,6 +283,96 @@ def _copy_to_clipboard(text: str) -> bool:
         return False
 
 
+# --- Anonymisation ----------------------------------------------------------
+
+_ANON_STRATEGIES = ("pseudonymize", "redact", "hash", "partial")
+
+
+def _print_anon_report(counts: dict[str, int], reversible: bool) -> None:
+    """Affiche le récapitulatif des PII anonymisées (rappel sécurité inclus)."""
+    if not counts:
+        console.print(
+            "[yellow]⚠[/yellow]  Aucune donnée personnelle détectée. "
+            "Vérifier manuellement avant diffusion — la détection n'est pas exhaustive."
+        )
+        return
+    table = Table(
+        show_header=True,
+        header_style="bold red",
+        title="Données personnelles anonymisées",
+        title_justify="left",
+    )
+    table.add_column("Type", style="dim")
+    table.add_column("Occurrences", justify="right", style="cyan")
+    for entity_type, count in sorted(counts.items(), key=lambda kv: -kv[1]):
+        table.add_row(entity_type, _format_number(count))
+    table.add_row("[bold]Total[/bold]", f"[bold]{_format_number(sum(counts.values()))}[/bold]")
+    console.print(table)
+    console.print(
+        "[yellow]⚠[/yellow]  Anonymisation automatique non garantie à 100 %. "
+        "Relire le document avant de le transmettre."
+    )
+    if reversible:
+        console.print(
+            "[dim]Table de correspondance enregistrée : conservez-la en lieu sûr "
+            "pour ré-identifier (commande [cyan]--deanonymize[/cyan]).[/dim]"
+        )
+
+
+def _save_mapping(mapping: object, path: Path, passphrase: str) -> None:
+    """Persiste la table de mapping (chiffrée si une passphrase est fournie)."""
+    from trimtokens.anonymizer.mapping import AnonymizationMap
+
+    assert isinstance(mapping, AnonymizationMap)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if passphrase:
+        mapping.save_encrypted(path, passphrase)
+    else:
+        mapping.save_json(path)
+
+
+def _run_deanonymize(
+    files: list[Path],
+    map_path: Path,
+    passphrase: str,
+    out_dir: Path | None,
+    stdout: bool,
+    quiet: bool = False,
+) -> int:
+    """Restaure les valeurs réelles dans des documents anonymisés. Retourne le nb d'échecs."""
+    from trimtokens.anonymizer.mapping import AnonymizationMap, MappingError
+
+    try:
+        if passphrase:
+            mapping = AnonymizationMap.load_encrypted(map_path, passphrase)
+        else:
+            mapping = AnonymizationMap.load_json(map_path)
+    except MappingError as exc:
+        log.error("Lecture de la table impossible : %s", exc)
+        return len(files)
+
+    failures = 0
+    for file_path in files:
+        try:
+            text = file_path.read_text(encoding="utf-8")
+            restored = mapping.deanonymize(text)
+            if stdout:
+                sys.stdout.write(restored)
+                if not restored.endswith("\n"):
+                    sys.stdout.write("\n")
+                sys.stdout.flush()
+            else:
+                target_dir = out_dir or file_path.parent
+                target = target_dir / (file_path.stem + ".deanon" + file_path.suffix)
+                target.write_text(restored, encoding="utf-8")
+                if not quiet:
+                    console.print(f"[green]✓[/green] {file_path.name} → {target}")
+        except OSError as exc:
+            log.error("Échec dé-anonymisation %s : %s", file_path, exc)
+            failures += 1
+    return failures
+
+
 # --- Construction options (config TOML + CLI overrides) -------------------
 
 
@@ -283,6 +392,12 @@ def _build_options(
     keep_toc: bool,
     keep_bibliography: bool,
     keep_sparse: bool,
+    anonymize: bool,
+    anon_strategy: str,
+    anon_salt: str,
+    no_ner: bool,
+    anon_entities: str,
+    anon_min_score: float,
 ) -> ExtractOptions:
     """Construit `ExtractOptions` en empilant defaults → config TOML → flags CLI.
 
@@ -307,6 +422,12 @@ def _build_options(
             filter_toc=not keep_toc,
             filter_bibliography=not keep_bibliography,
             filter_sparse=not keep_sparse,
+            anonymize=anonymize,
+            anon_strategy=anon_strategy,
+            anon_salt=anon_salt,
+            anon_ner=not no_ner,
+            anon_entities=anon_entities,
+            anon_min_score=anon_min_score,
         )
 
     try:
@@ -347,6 +468,14 @@ def _build_options(
         options.filter_bibliography = not keep_bibliography
     if _is_cli("keep_sparse"):
         options.filter_sparse = not keep_sparse
+    # Les flags d'anonymisation ne figurent pas dans la config TOML : ils
+    # surchargent toujours directement (anonymisation = décision par exécution).
+    options.anonymize = anonymize
+    options.anon_strategy = anon_strategy
+    options.anon_salt = anon_salt
+    options.anon_ner = not no_ner
+    options.anon_entities = anon_entities
+    options.anon_min_score = anon_min_score
 
     return options
 
@@ -446,6 +575,57 @@ def main(
         "--keep-sparse",
         help="Conserver les pages éparses même si --smart-filter actif.",
     ),
+    anonymize: bool = typer.Option(
+        False,
+        "--anonymize",
+        "-A",
+        help="Anonymiser les données personnelles (email, IBAN, SIRET, noms…) avant export.",
+    ),
+    anon_strategy: str = typer.Option(
+        "pseudonymize",
+        "--anon-strategy",
+        help="Stratégie : pseudonymize (réversible), redact, hash, partial.",
+    ),
+    anon_salt: str = typer.Option(
+        "",
+        "--anon-salt",
+        help="Sel pour la stratégie hash (stabilise/diversifie les pseudonymes).",
+    ),
+    no_ner: bool = typer.Option(
+        False,
+        "--no-ner",
+        help="Désactiver la détection des noms/sociétés/lieux (regex seules).",
+    ),
+    anon_entities: str = typer.Option(
+        "personne",
+        "--anon-entities",
+        help="Entités NER à anonymiser (CSV : personne,lieu,organisation ou 'all'). "
+        "Défaut personne = meilleure précision.",
+    ),
+    anon_min_score: float = typer.Option(
+        0.5,
+        "--anon-min-score",
+        help="Seuil de confiance NER [0–1] : plus haut = moins de faux positifs.",
+        min=0.0,
+        max=1.0,
+    ),
+    anon_map_out: Path | None = typer.Option(
+        None,
+        "--anon-map-out",
+        help="Fichier où écrire la table de correspondance (réversibilité). "
+        "Chiffré si --passphrase fourni.",
+        dir_okay=False,
+    ),
+    passphrase: str = typer.Option(
+        "",
+        "--passphrase",
+        help="Passphrase de (dé)chiffrement de la table de correspondance.",
+    ),
+    deanonymize: bool = typer.Option(
+        False,
+        "--deanonymize",
+        help="Mode inverse : restaurer les valeurs réelles depuis --anon-map-out.",
+    ),
     no_cache: bool = typer.Option(
         False,
         "--no-cache",
@@ -503,6 +683,7 @@ def main(
     ),
 ) -> None:
     """Convertit documents → Markdown compact pour LLM."""
+    _force_utf8_streams()
     if path is None:
         console.print(ctx.get_help())
         raise typer.Exit()
@@ -526,6 +707,27 @@ def main(
 
     if quiet and verbose:
         raise typer.BadParameter("--quiet et --verbose sont mutuellement exclusifs.")
+
+    if anonymize and anon_strategy not in _ANON_STRATEGIES:
+        raise typer.BadParameter(
+            f"Stratégie invalide : '{anon_strategy}'. Attendu : {', '.join(_ANON_STRATEGIES)}."
+        )
+
+    # --- Mode dé-anonymisation : court-circuite tout le pipeline d'extraction ---
+    if deanonymize:
+        if anon_map_out is None:
+            raise typer.BadParameter("--deanonymize requiert --anon-map-out (la table à utiliser).")
+        if not anon_map_out.exists():
+            raise typer.BadParameter(f"Table introuvable : {anon_map_out}")
+        deanon_out: Path | None = out.resolve() if out is not None else None
+        if deanon_out is not None:
+            deanon_out.mkdir(parents=True, exist_ok=True)
+        deanon_files = _collect_input_files(path, recursive=recursive)
+        if not deanon_files:
+            log.error("Aucun fichier à dé-anonymiser.")
+            raise typer.Exit(code=1)
+        fails = _run_deanonymize(deanon_files, anon_map_out, passphrase, deanon_out, stdout, quiet)
+        raise typer.Exit(code=1 if fails else 0)
 
     files = _collect_input_files(path, recursive=recursive)
     if not files:
@@ -553,6 +755,12 @@ def main(
         keep_toc=keep_toc,
         keep_bibliography=keep_bibliography,
         keep_sparse=keep_sparse,
+        anonymize=anonymize,
+        anon_strategy=anon_strategy,
+        anon_salt=anon_salt,
+        no_ner=no_ner,
+        anon_entities=anon_entities,
+        anon_min_score=anon_min_score,
     )
 
     out_dir: Path | None = None
@@ -560,14 +768,25 @@ def main(
         out_dir = out.resolve()
         out_dir.mkdir(parents=True, exist_ok=True)
 
+    # Stratégie d'anonymisation partagée sur tout le lot : une valeur (ex. un nom)
+    # reçoit le même pseudonyme dans tous les fichiers traités → cohérence.
+    shared_strategy: object | None = None
+    anon_total: Counter[str] = Counter()
+    if anonymize:
+        from trimtokens.anonymizer import build_strategy
+
+        shared_strategy = build_strategy(anon_strategy, salt=anon_salt)
+
     failure_count = 0
     last_output_text = ""
 
     for file_path in files:
         try:
             start = time.perf_counter()
-            result = process(file_path, options)
+            result = process(file_path, options, anon_strategy=shared_strategy)  # type: ignore[arg-type]
             duration = time.perf_counter() - start
+            if result.anonymized:
+                anon_total.update(result.anon_counts)
 
             output_text = _render_output(result, fmt)
             if max_chars > 0 and len(output_text) > max_chars:
@@ -603,6 +822,39 @@ def main(
 
     if clipboard and last_output_text and _copy_to_clipboard(last_output_text) and not quiet:
         console.print("[dim italic]Copié dans le presse-papiers.[/dim italic]")
+
+    # Anonymisation : persistance de la table + récapitulatif sécurité.
+    if anonymize:
+        from trimtokens.anonymizer import PseudonymizeStrategy
+
+        reversible = anon_strategy == "pseudonymize"
+        if (
+            anon_map_out is not None
+            and isinstance(shared_strategy, PseudonymizeStrategy)
+            and reversible
+        ):
+            try:
+                _save_mapping(shared_strategy.mapping, anon_map_out, passphrase)
+                if not quiet:
+                    lock = "chiffrée" if passphrase else "EN CLAIR"
+                    console.print(
+                        f"[green]✓[/green] Table de correspondance ({lock}) → {anon_map_out}"
+                    )
+                    if not passphrase:
+                        console.print(
+                            "[yellow]⚠[/yellow]  Table non chiffrée : ajouter [cyan]--passphrase[/cyan] "
+                            "pour protéger les données réelles."
+                        )
+            except Exception as exc:
+                log.error("Écriture de la table impossible : %s", exc)
+                failure_count += 1
+        elif anon_map_out is not None and not reversible and not quiet:
+            console.print(
+                f"[yellow]⚠[/yellow]  Stratégie '{anon_strategy}' irréversible : "
+                "aucune table écrite (--anon-map-out ignoré)."
+            )
+        if not quiet:
+            _print_anon_report(dict(anon_total), reversible)
 
     if failure_count > 0:
         raise typer.Exit(code=1)

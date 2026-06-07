@@ -45,6 +45,42 @@ def test_cli_processes_txt_file_default_output(tmp_path: Path) -> None:
     assert "---\nsource:" in content
 
 
+def test_cli_anonymize_and_deanonymize_roundtrip(tmp_path: Path) -> None:
+    src = tmp_path / "contrat.txt"
+    src.write_text("Client jean.dupont@example.fr, SIRET 40483304000011.", encoding="utf-8")
+    map_path = tmp_path / "table.map.json"
+
+    # Anonymisation : produit contrat.clean.md sans PII + table de correspondance.
+    result = runner.invoke(
+        app,
+        [str(src), "--anonymize", "--no-ner", "--anon-map-out", str(map_path), "--quiet"],
+    )
+    assert result.exit_code == 0
+    cleaned = (tmp_path / "contrat.clean.md").read_text(encoding="utf-8")
+    assert "jean.dupont@example.fr" not in cleaned
+    assert "40483304000011" not in cleaned
+    assert "[EMAIL_1]" in cleaned
+    assert map_path.exists()
+
+    # Dé-anonymisation : restaure les valeurs réelles depuis la table.
+    deanon = runner.invoke(
+        app,
+        [str(tmp_path / "contrat.clean.md"), "--deanonymize", "--anon-map-out", str(map_path),
+         "--quiet"],
+    )
+    assert deanon.exit_code == 0
+    restored = (tmp_path / "contrat.clean.deanon.md").read_text(encoding="utf-8")
+    assert "jean.dupont@example.fr" in restored
+    assert "40483304000011" in restored
+
+
+def test_cli_anonymize_invalid_strategy(tmp_path: Path) -> None:
+    src = tmp_path / "doc.txt"
+    src.write_text("texte", encoding="utf-8")
+    result = runner.invoke(app, [str(src), "--anonymize", "--anon-strategy", "bogus", "--quiet"])
+    assert result.exit_code != 0
+
+
 def test_cli_format_txt(tmp_path: Path) -> None:
     src = tmp_path / "doc.txt"
     src.write_text("Hello world.", encoding="utf-8")

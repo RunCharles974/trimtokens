@@ -96,5 +96,19 @@ Arborescence complète, `pyproject.toml`, `README.md` fr, `requirements*.txt`, `
 ## Ordre génération recommandé spec §300
 pyproject.toml → models.py → cleaners/ → ocr/ → extracteurs → renderer → core → CLI → GUI → tests → build → README.
 
-## État actuel (2026-05-25)
-Greenfield, seul `TrimTokens.md` (spec) + ce `CLAUDE.md` présents. Aucune ligne de code écrite. Repo git non initialisé.
+## État actuel (2026-06-06)
+v0.1.0 livré : pipeline complet (extracteurs, OCR cache+parallel, cleaning 11 étapes, CLI typer, GUI, ~24 fichiers tests). Repo git initialisé.
+
+**v0.2 en cours — anonymisation PII** (objectif : traiter contrats/docs confidentiels en local) :
+- `anonymizer/recognizers.py` : détection PII regex FR *validées* (Luhn, mod-97 IBAN, clé NIR) — email, tél FR, IBAN, SIREN, SIRET, TVA, NIR, carte bancaire, plaque. Zéro dep.
+- `anonymizer/mapping.py` : `AnonymizationMap` valeur↔pseudonyme, `deanonymize()`, JSON + chiffrement Fernet (KDF scrypt stdlib, dep `cryptography` optionnelle via `[anonymize]`), `merge_maps`.
+- `anonymizer/strategies.py` : `Pseudonymize`/`Redact`/`Hash`/`PartialMask` + moteur `apply()` (remplacement droite→gauche).
+- `anonymizer/__init__.py` : orchestrateur `anonymize_text()` → `AnonymizationResult(text, matches, mapping, counts)`.
+- `anonymizer/ner.py` : Presidio + spaCy `fr_core_news_lg` (extra `[anonymize]`), lazy+caché, fallback regex-only silencieux si absent. Entités PERSONNE/ORGANISATION/LIEU. Regex validées prioritaires sur NER aux chevauchements (`resolve_overlaps`).
+- Wiring complet : `ExtractOptions` (anonymize/anon_strategy/anon_salt/anon_ner), `core.process(anon_strategy=...)` (stratégie partagée sur lot = pseudonymes cohérents inter-fichiers), `ProcessResult.{anonymized,anon_counts,anon_map}`, renderer front-matter `anonymized`+compteurs.
+- CLI : `--anonymize/-A`, `--anon-strategy`, `--anon-salt`, `--no-ner`, `--anon-map-out`, `--passphrase`, mode `--deanonymize`. Rapport entités + rappel sécurité en fin.
+- GUI : case « 🕵 Anonymiser », table JSON écrite à côté des sorties (`gui/services.py` stratégie partagée).
+- README section anonymisation + CHANGELOG [Unreleased] Added.
+- Tests : 5 fichiers `test_anonymizer*.py` + 2 tests CLI = **293 passed / 4 skipped (env tcl/tesseract)**. ruff clean, mypy --strict clean (restes = `tiktoken`/`tomli` env local seulement).
+- **Feature finalisée.** Reste optionnel : bump version 0.2.0 + release (décision user) ; tests NER réels nécessitent modèle spaCy 500 Mo (non installé ici).
+- Règle sécurité : anonymisation jamais garantie 100 % → toujours rapport entités avant export.
